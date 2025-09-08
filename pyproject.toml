@@ -1,0 +1,24 @@
+[project]
+name = "nutriscore-app"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "nicolaieff",email = "lina.nicolaieff@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gradio (>=5.44.1,<6.0.0)",
+    "matplotlib (>=3.10.6,<4.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "nutriscore_app", from = "src"}]
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.3.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

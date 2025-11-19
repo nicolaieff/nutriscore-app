@@ -45,7 +45,18 @@ Pour générer le requirement a partir de poetry :
 poetry self add poetry-plugin-export
 poetry export --without-hashes -f requirements.txt --output requirements.txt
 
-git add .
-git commit -m "Mise à jour"
-git push github main  # Vers GitHub
-git push huggingface main  # Vers Hugging Face
+Verif remote existant
+> git remote -v
+
+si no exist 
+> git remote add github https://github.com/username/nutriscore-app.git
+> git remote add huggingface https://huggingface.co/username/nutriscore-app
+
+
+cmd git :
+>git add .
+>git commit -m "Mise à jour"
+>git push github main  # Vers GitHub
+>git push huggingface main  # Vers Hugging Face
+
+> git pull huggingface main

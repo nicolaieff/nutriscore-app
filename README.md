@@ -18,6 +18,12 @@ Application interactive pour visualiser l’impact des quantités sur un Nutri-S
 ```bash
 poetry install
 poetry run python app.py
+
+poetry shell
+poetry env remove python
+poetry env use 3.10
+poetry install
+poetry lock
 ```
 
 Memo - Resumé des commandes POETRY :

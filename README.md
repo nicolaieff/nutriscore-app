@@ -56,8 +56,10 @@ Verif remote existant
 
 si no exist 
 > git remote add github https://github.com/username/nutriscore-app.git
-> git remote add huggingface https://huggingface.co/username/nutriscore-app
+> git remote add huggingface https://huggingface.co/spaces/lililoving/nutriscore-app
 
+si error
+> git remote remove huggingface
 
 cmd git :
 >git add .

@@ -1,10 +1,47 @@
 import gradio as gr
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
+import plotly.express as px
 
 # Charger dataset local
 df = pd.read_parquet("food_toviz.parquet")
+df_country = pd.read_parquet("nutrisc_country.parquet")
+
+
+palette_nutriscore = [
+    (0.0, "#009E3A"),  # A
+    (0.20, "#7ED321"),  # B
+    (0.52, "#FFEB3B"),  # C
+    (0.84, "#FFA500"),  # D
+    (1.0, "#E60000")    # E
+]
+
+
+def plot_country_map():
+    df = df_country.copy()
+    fig = px.choropleth(
+        df,
+        locations="country_iso3",
+        color="nutriscore_mediane",
+        hover_name="country_0",
+        hover_data=["nutriscore_moyen", "nb_produits"],
+        color_continuous_scale=palette_nutriscore,
+        # title="Qualité nutritionnelle médiane par pays (Nutriscore)",
+        )
+    fig.update_layout(
+        geo=dict(
+            bgcolor="beige",
+            lakecolor="beige",
+            showland=True,
+            landcolor="beige",
+            showocean=True,
+            oceancolor="lightblue",
+            showframe=False,
+            projection_type="natural earth"
+        ),
+        paper_bgcolor="beige",
+        margin={"r":0,"t":0,"l":0,"b":0}  # gauche, droite, haut, bas
+        )
+    return fig
 
 
 def filtrer_dataframe(colonne, valeur_min, valeur_max):
@@ -18,67 +55,50 @@ def filtrer_dataframe(colonne, valeur_min, valeur_max):
     return f"{len(res)} lignes sélectionnées", res
 
 
-
-def stats_pays(pays):
-    return f"Statistiques du pays : {pays}"
-
-def stats_modele(param):
-    return f"Performances du modèle avec paramètre : {param}"
-
-def analyse_aliment(nom):
-    return f"Analyse nutritionnelle de l’aliment : {nom}"
+def choisir_shap(avec_cat: bool):
+    if avec_cat:
+        return "shap_summary_all.png"
+    else:
+        return "shap_summary_nutriments.png"
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("# Tableau de bord Nutrition")
+    gr.Markdown("# Nutriscore")
 
     with gr.Tabs():  
-        # ---- ONGLET 1 ----
-        with gr.Tab("Pays - Stats"):
-            gr.Markdown("### Statistiques par pays")
-            pays = gr.Dropdown(["France", "Italie", "Espagne", "USA"], label="Choisir un pays")
-            bouton1 = gr.Button("Afficher")
-            sortie1 = gr.Textbox(label="Résultat")
-            bouton1.click(stats_pays, inputs=pays, outputs=sortie1)
+        # ---- ONGLET 1 ---- ok
+        with gr.Tab("🌍 Carte par pays"):
+            gr.Markdown("### Nutriscore médian par pays")
+            gr.Markdown("*Affichage des pays avec au moins 20 000 produits*")
+            plot2 = gr.Plot(value=plot_country_map(), label="Carte", elem_classes="w-full")
 
-        # ---- ONGLET 2 ----
-        with gr.Tab("Modèle - Stats"):
-            gr.Markdown("### Statistiques du modèle")
-            param = gr.Slider(0, 1, step=0.1, label="Paramètre du modèle")
-            bouton2 = gr.Button("Calculer")
-            sortie2 = gr.Textbox(label="Résultat")
-            bouton2.click(stats_modele, inputs=param, outputs=sortie2)
+
+        # ---- ONGLET 2 ---- ok
+        with gr.Tab("🤖 Modèle explication"):
+            gr.Markdown("### SHAP value")
+            with gr.Row():
+                btn_cat = gr.Button("Avec catégories")
+                btn_sans_cat = gr.Button("Sans catégories")
+
+            sortie_shap = gr.Image(value="shap_summary_all.png", label="SHAP")
+
+            btn_cat.click(fn=choisir_shap, inputs=gr.State(True), outputs=sortie_shap)
+            btn_sans_cat.click(fn=choisir_shap, inputs=gr.State(False), outputs=sortie_shap)
+
 
         # ---- ONGLET 3 ----
-        with gr.Tab("Aliment - Analyse"):
-            gr.Markdown("### Analyse d’un aliment")
-            aliment = gr.Textbox(label="Nom de l’aliment")
+        with gr.Tab("🍕 Un aliment"):
+            gr.Markdown("### Analyse d'un aliment")
+
+            aliment = gr.Textbox(label="Nom de l'aliment")
             bouton3 = gr.Button("Analyser")
             sortie3 = gr.Textbox(label="Résultat")
-            bouton3.click(analyse_aliment, inputs=aliment, outputs=sortie3)
 
-    gr.Markdown("## Visualisation et filtrage d’un dataset local (pandas)")
+            # bouton3.click(analyse_aliment, inputs=aliment, outputs=sortie3)
+
+    gr.Markdown("## Visualisation fixe global")
+    gr.DataFrame(df.head(6), label="Les données")
     
-    # Aperçu initial : 50 premières lignes
-    gr.DataFrame(df.head(50), label="Aperçu du dataset (50 premières lignes)")
-    
-    # Widgets
-    colonne = gr.Dropdown(choices=df.columns.tolist(), label="Choisir une colonne")
-    min_val = gr.Number(label="Valeur min")
-    max_val = gr.Number(label="Valeur max")
-
-    bouton = gr.Button("Filtrer")
-
-    # Sorties
-    sortie_texte = gr.Textbox(label="Résultat")
-    sortie_table = gr.DataFrame(label="DataFrame filtrée")
-
-    # Callbacks
-    bouton.click(
-        filtrer_dataframe,
-        inputs=[colonne, min_val, max_val],
-        outputs=[sortie_texte, sortie_table]
-    )
 
 if __name__ == "__main__":
     # demo.launch(share=True)
